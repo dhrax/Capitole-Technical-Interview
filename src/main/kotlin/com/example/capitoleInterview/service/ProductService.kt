@@ -46,6 +46,26 @@ class ProductService {
         Product("SKU0030", "Pack of 10 Ballpoint Pens, Blue Ink", Category.STATIONERY, 7.50),
     )
 
+    /**
+     * Retrieves a paginated list of products, optionally filtered by category and sorted by a specified field.
+     *
+     * This method filters products by category (if provided), sorts the products based on the specified field
+     * (if given), and applies the best discount to each product. It then returns a paginated response containing
+     * the filtered, sorted, and discounted products.
+     *
+     * The method supports pagination through `page` and `size` parameters and supports sorting by fields such as
+     * SKU, price, description, or category.
+     *
+     * @param page The page number to retrieve, starting from 0.
+     * @param size The number of products to return per page.
+     * @param category An optional category to filter products by. If null or empty, no filtering is applied.
+     * @param sortBy An optional field to sort the products by. Supported values: SKU, PRICE, DESCRIPTION, CATEGORY.
+     * @return A `Page` of `ProductDTO` containing the filtered, sorted, and discounted products for the current page.
+     *
+     * @see ProductDTO
+     * @see Field
+     * @see applyBestDiscount
+     */
     fun getProducts(page: Int, size: Int, category: String?, sortBy: String?): Page<ProductDTO> {
         // Filter products by category if provided
         val filtered = if (!category.isNullOrBlank()) {
@@ -63,20 +83,32 @@ class ProductService {
             else -> filtered
         }
 
-        // Create a PageRequest instance for pagination
         val pageRequest = PageRequest.of(page, size)
 
         // Get the sublist of products for the current page
         val start = (page * size).coerceAtMost(sorted.size)
         val end = ((page + 1) * size).coerceAtMost(sorted.size)
 
-        // Apply discount to each product and return as ProductDTO
+        // Apply discount to each product
         val productsWithDiscount = sorted.subList(start, end).map { applyBestDiscount(it) }
 
-        // Return a Page containing the current page of products
         return PageImpl(productsWithDiscount, pageRequest, sorted.size.toLong())
     }
 
+    /**
+     * Calculates the best discount applicable for a given product based on its category and SKU.
+     *
+     * The highest discount is applied to the product price, and the final price after discount is calculated.
+     *
+     * @param product The product for which the discount is to be applied. It contains the product's category, SKU, and price.
+     * @return A `ProductDTO` object that contains:
+     * - The original product information.
+     * - The applied discount (as a percentage).
+     * - The final price after applying the discount.
+     *
+     * @see ProductDTO
+     * @see Category
+     */
     fun applyBestDiscount(product: Product): ProductDTO {
         val discounts = mutableListOf<Pair<String, Double>>()
 
