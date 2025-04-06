@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
-import org.springframework.data.domain.Page
+import org.springframework.data.web.PagedModel
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -33,7 +33,7 @@ class ProductController(
         @RequestParam(defaultValue = "5") @Parameter(description = "Number of products per page") size: Int,
         @RequestParam(required = false) @Parameter(description = "Category to filter products by") category: String?,
         @RequestParam(required = false) @Parameter(description = "Sort the products by the given field") sortBy: String?
-    ): Page<ProductDTO> {
-        return productService.getProducts(page, size, category, sortBy)
+    ): PagedModel<ProductDTO> {
+        return PagedModel(productService.getProducts(page, size, category, sortBy))
     }
 }
