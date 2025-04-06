@@ -46,7 +46,7 @@ class ProductService {
         Product("SKU0030", "Pack of 10 Ballpoint Pens, Blue Ink", Category.STATIONERY, 7.50),
     )
 
-    fun getProducts(category: String?, sortBy: String?): List<ProductDTO> {
+    fun getProducts(page: Int, size: Int, category: String?, sortBy: String?): Page<ProductDTO> {
         // Filter products by category if provided
         val filtered = if (!category.isNullOrBlank()) {
             products.filter { it.category.label.equals(category, ignoreCase = true) }
@@ -63,7 +63,18 @@ class ProductService {
             else -> filtered
         }
 
-        return sorted.map { applyBestDiscount(it) }
+        // Create a PageRequest instance for pagination
+        val pageRequest = PageRequest.of(page, size)
+
+        // Get the sublist of products for the current page
+        val start = (page * size).coerceAtMost(sorted.size)
+        val end = ((page + 1) * size).coerceAtMost(sorted.size)
+
+        // Apply discount to each product and return as ProductDTO
+        val productsWithDiscount = sorted.subList(start, end).map { applyBestDiscount(it) }
+
+        // Return a Page containing the current page of products
+        return PageImpl(productsWithDiscount, pageRequest, sorted.size.toLong())
     }
 
     fun applyBestDiscount(product: Product): ProductDTO {
